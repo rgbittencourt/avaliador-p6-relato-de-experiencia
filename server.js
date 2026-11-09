@@ -34,7 +34,7 @@ app.use(express.json({limit:'4mb'}));
 app.use((req,_res,next)=>{req.ia=configDaRequisicao(req);next();});
 const chamarIAReq=(req,prompt,temperatura)=>chamarIA(prompt,temperatura,{config:req.ia});
 app.use(express.static(path.join(__dirname,'public')));
-app.get('/api/health',(_req,res)=>res.json({ok:true,openaiConfigurada:IA.configurada,...statusIA(IA)}));
+app.get('/api/health',(_req,res)=>res.json({ok:true,openaiConfigurada:IA.configurada,...statusIA(IA),postgresConfigurado:Boolean(process.env.DATABASE_URL),backupGitHubConfigurado:Boolean(db.statusBackupGitHub().configurado)}));
 
 function precisaChave(res){
   if(res.req.ia.configurada) return false;

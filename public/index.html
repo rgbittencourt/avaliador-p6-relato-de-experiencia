@@ -49,7 +49,7 @@
     <label>P5: agente mediador com IA</label><textarea id="recursoP5"></textarea>
     <label>P6: relato de experiência e finalização do Padlet</label><textarea id="recursoP6"></textarea>
     <h3>Quadro e autoavaliação de competências e ferramentas</h3>
-    <label>Quadro de competências (C1 a C4, nenhuma competência e ferramentas, por coluna P1 a P6)</label><textarea id="quadroCompetencias" class="tall mono"></textarea><div class="hint">Confira as marcações no PDF com "Ver páginas do relato": a leitura automática de tabelas pode deslocar colunas.</div>
+    <label>Quadro de competências (C1 a C4, nenhuma competência e ferramentas, por coluna P1 a P6)</label><textarea id="quadroCompetencias" class="tall mono"></textarea><div id="quadroStatus" class="status"></div><div id="quadroTabela" style="overflow:auto;margin-top:6px"></div><div class="hint">Só "x" ou "X" contam como marcação; "-", espaço ou célula vazia significam sem marcação. Confira com "Ver páginas do relato".</div>
     <label>Reflexão sobre as competências (prévias, não desenvolvidas e outras)</label><textarea id="reflexaoCompetencias"></textarea>
     <h3>Aplicação, resultados e continuidade</h3>
     <label>Resultados (aplicação, opinião do público, suficiência dos recursos, o que faria diferente)</label><textarea id="resultados"></textarea>
@@ -71,6 +71,7 @@
 <div id="pageModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Visualização da página do relato"><div class="modalbar"><strong id="modalTitle">Página do relato</strong><button id="closeModal">Fechar</button></div><img id="modalImage" alt="Página ampliada do relato"></div>
 <script src="vendor/pdf.min.js"></script>
 <script src="relato-core.js"></script>
+<script src="quadro.js"></script>
 <script src="seletor-ia.js"></script>
 <script src="coerencia-ui.js"></script>
 <script src="app.js"></script>

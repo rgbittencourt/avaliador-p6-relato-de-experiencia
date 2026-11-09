@@ -3,7 +3,7 @@ const C=window.RelatoCore;
 const RUBRIC=C.RUBRICA;
 const ORDER=C.ORDEM;
 const FIELD_IDS=['nome','matricula','orientador','titulo','resumo','palavrasChave','conformidadeModelo','linkDocumento','contextualizacao','desafio','publicoAlvo','recursoP2','recursoP3','recursoP4','recursoP5','recursoP6','quadroCompetencias','reflexaoCompetencias','resultados','proximosPassos','fechamento','iaFerramentas','iaFinalidades','iaValidacao','iaImpacto'];
-let classes=[],evaluations=[],currentEvaluationId=null,authHeader=sessionStorage.getItem('p6Auth')||'',rawPdfPages=[],pagePreviews=[];
+let classes=[],evaluations=[],currentEvaluationId=null,authHeader=sessionStorage.getItem('p6Auth')||'',rawPdfPages=[],pagePreviews=[],rawItemPages=[],quadroLidoPorPosicao=false;
 const $=id=>document.getElementById(id);
 const value=id=>$(id)?.type==='checkbox'?($(id).checked?'Sim, verificado':'Não verificado'):($(id)?.value||'').trim();
 const escapeHtml=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -91,8 +91,8 @@ function section(text,start,ends,opts){const a=firstIndex(text,[start]);if(a.ind
 const MARCAS={
   titulo:/T[ÍI]TULO:/i, resumo:/RESUMO:/i, palavras:/PALAVRAS[- ]CHAVE:/i, relato:/RELATO DE EXPERI[ÊE]NCIA\s*\n/i,
   p2:/\n\s*P2:[^\n]*/i, p3:/\n\s*P3:[^\n]*/i, p4:/\n\s*P4:[^\n]*/i, p5:/\n\s*P5:[^\n]*/i, p6:/\n\s*P6:[^\n]*/i,
-  competencias:/Produzindo esses recursos,?\s*desenvolvi(?:[\s\S]{0,160}?quadro a seguir:|[^\n]*)/i, resultados:/Considerando o desafio que escolhi(?:[\s\S]{0,160}?seguintes resultados:|[^\n]*)/i,
-  passos:/Com base nos resultados obtidos(?:[\s\S]{0,200}?considero que:|[^\n]*)/i, fechamento:/Ao finalizar este relato de experi[êe]ncia[.…]*/i,
+  competencias:/Produzindo esses recursos,?\s*desenvolvi(?:[\s\S]{0,160}?quadro a seguir:|[^\n]*)/i, resultados:/Considerando o desafio que escolhi(?:[\s\S]{0,160}?seguintes resultados:|[^\n]*)|^[ \t]*RESULTADOS(?:[ \t]+[A-ZÀ-Ü,]+)*[ \t]*$/im,
+  passos:/Com base nos resultados obtidos(?:[\s\S]{0,200}?considero que:|[^\n]*)|^[ \t]*PR[ÓO]XIMOS PASSOS[ \t]*$/im, fechamento:/^[ \t]*CONSIDERA[ÇC][ÕO]ES FINAIS[ \t]*$|Ao finalizar este relato(?: de experi[êe]ncia)?[.…]*/im,
   declaracao:/DECLARA[ÇC][ÃA]O DE USO DE INTELIG[ÊE]NCIA ARTIFICIAL/i,
   iaFerr:/Ferramentas de IA usadas:/i, iaUso:/Como as ferramentas de IA foram usadas[^:]*:/i, iaVal:/Como foi o processo de intera[çc][ãa]o e valida[çc][ãa]o[^:]*:/i, iaImp:/Impacto do uso da IA:/i
 };
@@ -127,7 +127,7 @@ function applyPreliminaryExtraction(text,fileName=''){
   $('quadroCompetencias').value=quadro;$('reflexaoCompetencias').value=reflexao;
   $('resultados').value=section(text,M.resultados,[M.passos,M.fechamento,M.declaracao]);
   $('proximosPassos').value=section(text,M.passos,[M.fechamento,M.declaracao]);
-  $('fechamento').value=section(text,M.fechamento,[M.declaracao]);
+  $('fechamento').value=section(text,M.fechamento,[M.declaracao]).replace(/^[\s,;.:…-]+/,'');
   const decl=section(text,M.declaracao,[/$^/],{keepLines:true});
   const iaFerr=section(decl,M.iaFerr,[M.iaUso,M.iaVal,M.iaImp]),iaUso=section(decl,M.iaUso,[M.iaVal,M.iaImp]),iaVal=section(decl,M.iaVal,[M.iaImp]),iaImp=section(decl,M.iaImp,[/$^/]);
   $('iaFerramentas').value=iaFerr||(/n[ãa]o utilizei ferramentas de ia/i.test(decl)?'Não utilizei ferramentas de IA generativa na elaboração deste relato.':'');
@@ -138,15 +138,32 @@ function openPage(index){$('modalTitle').textContent=`Página ${index+1} do rela
 function closePage(){$('pageModal').classList.add('hidden');$('modalImage').src='';document.body.style.overflow='';}
 async function semanticExtract(){
   if(!rawPdfPages.length)return alert('Importe um PDF primeiro.');const b=$('semanticExtract');b.disabled=true;b.textContent='Interpretando...';$('pdfStatus').textContent='Separando os parágrafos do relato e reconstruindo o quadro de competências...';
-  try{const result=await api('/api/extrair-relatorio',{method:'POST',body:JSON.stringify({paginas:rawPdfPages,camposPreliminares:formData()})});let mantidos=0;for(const [key,val] of Object.entries(result)){if(!$(key))continue;const novo=String(val||'').trim();if(!novo&&value(key)){mantidos++;continue;}$(key).value=novo;}$('pdfStatus').textContent=`Interpretação semântica concluída${mantidos?` (${mantidos} campo(s) que a IA deixou vazios mantiveram a leitura por seções)`:''}. Revise os campos e confira o quadro de competências nas páginas do relato.`;checkDuplicate();renderAlerts();}
+  try{const result=await api('/api/extrair-relatorio',{method:'POST',body:JSON.stringify({paginas:rawPdfPages,camposPreliminares:formData()})});let mantidos=0;for(const [key,val] of Object.entries(result)){if(!$(key))continue;if(key==='quadroCompetencias'&&quadroLidoPorPosicao)continue;const novo=String(val||'').trim();if(!novo&&value(key)){mantidos++;continue;}$(key).value=novo;}$('pdfStatus').textContent=`Interpretação semântica concluída${mantidos?` (${mantidos} campo(s) que a IA deixou vazios mantiveram a leitura por seções)`:''}. Revise os campos e confira o quadro de competências nas páginas do relato.`;checkDuplicate();renderAlerts();}
   catch(e){$('pdfStatus').textContent=`Não foi possível interpretar semanticamente: ${e.message}. Os campos preliminares, separados pelas seções do modelo, permanecem disponíveis para revisão.`;}finally{b.disabled=false;b.textContent='Reinterpretar campos com IA';}
 }
+// Quadro de competências lido pela posição das colunas no PDF (mais confiável que o texto corrido).
+function lerQuadroPorPosicao(){
+  quadroLidoPorPosicao=false;
+  if(!window.QuadroCompetencias||!rawItemPages.length)return;
+  try{const q=QuadroCompetencias.ler(rawItemPages);if(q.ok){$('quadroCompetencias').value=QuadroCompetencias.comoTexto(q);quadroLidoPorPosicao=true;}
+    $('quadroStatus').textContent=q.ok?'✔ Quadro lido pela posição das colunas P1 a P6 (só "x" conta como marcação). Confira com a página do relato.':`Leitura do quadro pela posição não foi possível (${q.motivo}); a interpretação com IA vai tentar reconstruí-lo.`;}
+  catch(e){$('quadroStatus').textContent=`Leitura do quadro pela posição falhou (${e.message}).`;}
+  renderQuadro();
+}
+// Mostra o quadro (formato "C1 | P1: x | ...") como tabela, para conferência rápida.
+function renderQuadro(){
+  const box=$('quadroTabela');if(!box)return;
+  const linhas=value('quadroCompetencias').split('\n').map(l=>l.split('|').map(c=>c.trim())).filter(c=>c.length>=7);
+  if(!linhas.length){box.innerHTML='';return;}
+  const cel=c=>{const v=c.replace(/^P[1-6]\s*:\s*/i,'');return v;};
+  box.innerHTML=`<table class="mini"><thead><tr><th></th>${['P1','P2','P3','P4','P5','P6'].map(p=>`<th>${p}</th>`).join('')}</tr></thead><tbody>${linhas.map(l=>{const ferr=/^ferramentas/i.test(l[0]);return `<tr><td><b>${escapeHtml(l[0])}</b></td>${l.slice(1,7).map(c=>{const v=cel(c);return ferr?`<td>${escapeHtml(v)}</td>`:`<td style="text-align:center">${/^x$/i.test(v)?'<span class="s">✔</span>':'<span style="color:var(--muted)">·</span>'}</td>`;}).join('')}</tr>`;}).join('')}</tbody></table>`;
+}
 async function importPdf(file){
-  if(!file)return;newEvaluation(false);$('pdfStatus').textContent='Lendo o texto e as páginas do PDF...';rawPdfPages=[];pagePreviews=[];$('semanticActions').classList.add('hidden');$('pageGallery').classList.add('hidden');
+  if(!file)return;newEvaluation(false);$('pdfStatus').textContent='Lendo o texto e as páginas do PDF...';rawPdfPages=[];pagePreviews=[];rawItemPages=[];quadroLidoPorPosicao=false;$('semanticActions').classList.add('hidden');$('pageGallery').classList.add('hidden');
   try{
     const bytes=new Uint8Array(await file.arrayBuffer());const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
-    for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const content=await page.getTextContent();rawPdfPages.push(normalizePdfText(layoutRows(content).map(rowText).join('\n')));const viewport=page.getViewport({scale:1.25});const canvas=document.createElement('canvas');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;pagePreviews.push(canvas.toDataURL('image/jpeg',.82));}
-    const text=rawPdfPages.join('\n\n');applyPreliminaryExtraction(text,file.name);renderPageGallery();$('semanticActions').classList.remove('hidden');
+    for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const content=await page.getTextContent();const vp1=page.getViewport({scale:1});rawItemPages.push({altura:vp1.height,itens:content.items.map(t=>({x:t.transform[4],y:t.transform[5],w:t.width,h:t.height,s:t.str}))});rawPdfPages.push(normalizePdfText(layoutRows(content).map(rowText).join('\n')));const viewport=page.getViewport({scale:1.25});const canvas=document.createElement('canvas');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;pagePreviews.push(canvas.toDataURL('image/jpeg',.82));}
+    const text=rawPdfPages.join('\n\n');applyPreliminaryExtraction(text,file.name);lerQuadroPorPosicao();renderPageGallery();$('semanticActions').classList.remove('hidden');
     const estrutura=/RELATO DE EXPERI[ÊE]NCIA/i.test(text)&&/DECLARA[ÇC][ÃA]O DE USO DE INTELIG/i.test(text);
     $('conformidadeModelo').value=`Arquivo PDF com ${pdf.numPages} página(s); estrutura do modelo P6 ${estrutura?'identificada':'não confirmada'}. Confira visualmente a formatação do resumo (sem recuo, espaçamento simples, justificado) e se os textos azuis foram removidos.`;
     $('pdfStatus').textContent=`PDF lido: ${pdf.numPages} página(s). Iniciando a interpretação semântica...`;checkDuplicate();updateScore();await semanticExtract();
@@ -155,8 +172,8 @@ async function importPdf(file){
 
 function evaluationId(){return currentEvaluationId||slug(value('matricula')||value('nome'))+'-'+Date.now();}
 function snapshot(){const scores={};ORDER.forEach(k=>scores[k]={points:selected(k),observation:value(`obs_${k}`)});return {id:evaluationId(),...formData(),scores,manualAlerts:value('manualAlerts'),feedback:value('feedback'),...(window.CoerenciaUI?CoerenciaUI.valores():{}),total:total(),palavrasResumo:C.contarPalavras(value('resumo')),updatedAt:new Date().toISOString()};}
-function loadEvaluation(e){newEvaluation(false);currentEvaluationId=e.id;FIELD_IDS.forEach(id=>{if($(id))$(id).value=e[id]||'';});ORDER.forEach(k=>{const p=e.scores?.[k]?.points;if(p!==null&&p!==undefined)setScore(k,p);$(`obs_${k}`).value=e.scores?.[k]?.observation||'';});$('manualAlerts').value=e.manualAlerts||'';$('feedback').value=e.feedback||'';if(window.CoerenciaUI)CoerenciaUI.definir(e);updateScore();window.scrollTo({top:0,behavior:'smooth'});}
-function newEvaluation(confirmFirst=true){if(confirmFirst&&!confirm('Limpar todo o formulário e iniciar nova avaliação?'))return;currentEvaluationId=null;FIELD_IDS.forEach(id=>{if($(id))$(id).value='';});ORDER.forEach(k=>{document.querySelectorAll(`input[name="rub_${k}"]`).forEach(x=>x.checked=false);$(`obs_${k}`).value='';});['manualAlerts','feedback'].forEach(id=>$(id).value='');if(window.CoerenciaUI)CoerenciaUI.limpar();['autoEvaluateStatus','pdfStatus'].forEach(id=>$(id).textContent='');$('pdfFile').value='';$('pageGallery').innerHTML='';$('pageGallery').classList.add('hidden');$('semanticActions').classList.add('hidden');rawPdfPages=[];pagePreviews=[];closePage();checkDuplicate();updateScore();}
+function loadEvaluation(e){newEvaluation(false);currentEvaluationId=e.id;FIELD_IDS.forEach(id=>{if($(id))$(id).value=e[id]||'';});ORDER.forEach(k=>{const p=e.scores?.[k]?.points;if(p!==null&&p!==undefined)setScore(k,p);$(`obs_${k}`).value=e.scores?.[k]?.observation||'';});$('manualAlerts').value=e.manualAlerts||'';$('feedback').value=e.feedback||'';if(window.CoerenciaUI)CoerenciaUI.definir(e);updateScore();renderQuadro();window.scrollTo({top:0,behavior:'smooth'});}
+function newEvaluation(confirmFirst=true){if(confirmFirst&&!confirm('Limpar todo o formulário e iniciar nova avaliação?'))return;currentEvaluationId=null;FIELD_IDS.forEach(id=>{if($(id))$(id).value='';});ORDER.forEach(k=>{document.querySelectorAll(`input[name="rub_${k}"]`).forEach(x=>x.checked=false);$(`obs_${k}`).value='';});['manualAlerts','feedback'].forEach(id=>$(id).value='');if(window.CoerenciaUI)CoerenciaUI.limpar();['autoEvaluateStatus','pdfStatus','quadroStatus'].forEach(id=>$(id).textContent='');$('pdfFile').value='';rawItemPages=[];quadroLidoPorPosicao=false;$('pageGallery').innerHTML='';$('pageGallery').classList.add('hidden');$('semanticActions').classList.add('hidden');rawPdfPages=[];pagePreviews=[];closePage();checkDuplicate();updateScore();}
 function checkDuplicate(){const n=value('nome').toLowerCase(),m=value('matricula').toLowerCase();const dup=evaluations.find(e=>e.id!==currentEvaluationId&&((m&&String(e.matricula||'').toLowerCase()===m)||(n&&String(e.nome||'').toLowerCase()===n)));$('nome').classList.toggle('duplicate',!!dup);$('matricula').classList.toggle('duplicate',!!dup);$('duplicidade').classList.toggle('hidden',!dup);$('duplicidade').textContent=dup?`Já existe avaliação para ${dup.nome||'este aluno'} nesta turma.`:'';}
 
 async function loadClasses(preferred){try{classes=await api('/api/turmas');$('classSelect').innerHTML=classes.map(c=>`<option value="${escapeHtml(c.id)}">${escapeHtml(c.nome)} (${c.quantidade||0})</option>`).join('');if(preferred&&classes.some(c=>c.id===preferred))$('classSelect').value=preferred;if(classes.length){await loadEvaluations();const ativa=classes.find(c=>c.id===$('classSelect').value);$('classNameInput').value=ativa?.nome||'';}else{evaluations=[];$('classNameInput').value='';renderRoster();$('classStatus').textContent='Crie uma turma para começar.';}}catch(e){$('classStatus').textContent=e.message;}}
@@ -283,3 +300,5 @@ if(window.CoerenciaUI)CoerenciaUI.montar({depoisDe:$('feedback').closest('sectio
   explicacao:'Uma única análise semântica relaciona o <b>percurso relatado</b> (os recursos P2 a P5, os resultados e os próximos passos) com o <b>desafio</b> e o <b>público-alvo</b> do estudante: o conjunto do que foi produzido e aplicado ajuda de fato esse público a enfrentar o desafio, ou os recursos ficaram como entregas isoladas sobre o tema? Ela não altera a rubrica, a nota nem o feedback da avaliação.',
   dicaAnalise:'Parecer técnico ao professor sobre a coerência do percurso com o desafio e o público-alvo. Totalmente editável.',
   dicaFeedback:'Mensagem pedagógica ao estudante sobre essa coerência. Totalmente editável.'});
+
+document.addEventListener('DOMContentLoaded',()=>{const q=$('quadroCompetencias');if(q)q.addEventListener('input',renderQuadro);});

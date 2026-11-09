@@ -114,7 +114,7 @@ REGRAS DE EVIDÊNCIA
 - O texto vem de um PDF lido automaticamente. Formatação visual (recuo, espaçamento, alinhamento, cor do texto) não é visível no texto: use as observações do professor sobre formato quando houver e não penalize nem confirme formatação sem evidência.
 - Restos do modelo (textos de orientação em azul, como "Escreva ao menos um parágrafo", "[Escreva aqui]", "(seu nome)", "preencher conforme exemplos") indicam orientações não removidas.
 - O relato deve ser narrativo. Muitas perguntas copiadas do modelo seguidas de respostas indicam formato de perguntas e respostas.
-- No quadro de competências, avalie a consistência do registro, não a quantidade de competências marcadas. Exemplos do modelo mantidos sem adaptação (como as marcações e ferramentas de exemplo da coluna P1/P2) contam como não preenchidos.
+- No quadro de competências, avalie a consistência do registro, não a quantidade de competências marcadas. No formato "C1 | P1: x | P2: | ...", só "x" é marcação; coluna vazia significa sem marcação. Exemplos do modelo mantidos sem adaptação (como as marcações e ferramentas de exemplo da coluna P1/P2) contam como não preenchidos.
 - Na declaração de IA, usar ou não usar IA não dá vantagem nem penalidade. A frase "Não utilizei ferramentas de IA generativa na elaboração deste relato." atende integralmente ao critério.
 - O reconhecimento de limitações nos resultados não é penalizado por si só.
 - Produza justificativas específicas, citando evidências ou ausências concretas do relato.
@@ -242,7 +242,7 @@ REGRAS OBRIGATÓRIAS
 - "contextualizacao": todo o texto narrativo entre "RELATO DE EXPERIÊNCIA" e o parágrafo da P2 (inclusive a frase que introduz a lista de recursos).
 - "desafio": só a pergunta-desafio citada; "publicoAlvo": só o público-alvo declarado. Se não houver, "".
 - "recursoP2" a "recursoP6": o texto do estudante sob cada título correspondente.
-- "quadroCompetencias": reconstrua o quadro em linhas de texto, uma por linha do quadro, no formato "C1 | P1: x | P2: | P3: x | P4: | P5: | P6:" (marque x somente onde há marcação), e a linha de ferramentas como "Ferramentas | P1: ... | P2: ... | ... | P6: ...". Se as colunas não puderem ser identificadas com segurança, transcreva o conteúdo e acrescente "(colunas incertas)".
+- "quadroCompetencias": se o campo preliminar já estiver no formato "C1 | P1: x | P2: | ...", COPIE-O sem alterar (ele foi lido pela posição das colunas). Senão, reconstrua o quadro em linhas de texto, uma por linha do quadro (C1, C2, C3, C4, "Não adquiri nenhuma"), no formato "C1 | P1: x | P2: | P3: x | P4: | P5: | P6:", e a linha de ferramentas como "Ferramentas | P1: ... | P2: ... | ... | P6: ...", com as ferramentas SEPARADAS por coluna. Só "x" ou "X" é marcação; "-", " - ", espaço ou célula vazia significam SEM marcação. Se as colunas não puderem ser identificadas com segurança, transcreva o conteúdo e acrescente "(colunas incertas)".
 - "reflexaoCompetencias": o parágrafo após o quadro sobre competências prévias, não desenvolvidas e outras.
 - "resultados", "proximosPassos", "fechamento": os parágrafos correspondentes.
 - "iaFerramentas", "iaFinalidades", "iaValidacao", "iaImpacto": as respostas aos quatro itens da declaração. Se o estudante escreveu apenas "Não utilizei ferramentas de IA generativa na elaboração deste relato.", coloque essa frase em "iaFerramentas" e deixe os demais vazios.

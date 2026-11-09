@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: avaliador-p6-relato-de-experiencia
+    repo: https://github.com/rgbittencourt/avaliador-p6-relato-de-experiencia
+    branch: main
+    region: oregon
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: IA_PROVEDOR
+        value: openai
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-5-5
+      - key: APP_USERNAME
+        value: professor
+      - key: APP_PASSWORD
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: GITHUB_DATA_OWNER
+        value: rgbittencourt
+      - key: GITHUB_DATA_REPO
+        value: avaliador-p6-relato-de-experiencia-dados
+      - key: GITHUB_DATA_BRANCH
+        value: main
+      - key: GITHUB_DATA_PATH
+        value: dados/turmas.json
+      - key: GITHUB_DATA_TOKEN
+        sync: false
+

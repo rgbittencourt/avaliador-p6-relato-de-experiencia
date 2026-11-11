@@ -293,7 +293,7 @@ function bind(){
   $('chooseImportJson').onclick=()=>$('importJson').click();$('importJson').onchange=e=>importClassJson(e.target.files[0]);
 }
 
-document.addEventListener('DOMContentLoaded',async()=>{if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.min.js';renderRubric();bind();updateScore();try{await loadClasses();}catch{}if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js').catch(()=>{});});
+document.addEventListener('DOMContentLoaded',async()=>{if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.min.js';renderRubric();bind();updateScore();try{const q=new URLSearchParams(location.search),tq=q.get('turma'),aq=q.get('avaliacao');await loadClasses(tq||undefined);if(aq){const e=evaluations.find(x=>x.id===aq);if(e){loadEvaluation(e);$('classStatus').textContent='Avaliação aberta pelo link do Fechamento do Portfólio.';}else $('classStatus').textContent='A avaliação indicada no link não foi encontrada nesta turma.';}}catch{}if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js').catch(()=>{});});
 // Bloco de coerência (complementar), logo abaixo do Feedback gerado.
 if(window.CoerenciaUI)CoerenciaUI.montar({depoisDe:$('feedback').closest('section'),tagCard:'section',coletar:()=>formData(),api,
   titulo:'Coerência do percurso com o desafio',produto:'do percurso relatado',

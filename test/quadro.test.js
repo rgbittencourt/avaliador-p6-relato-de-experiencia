@@ -31,3 +31,18 @@ test('sem quadro, a leitura avisa e não inventa', () => {
   assert.equal(q.ok, false);
   assert.equal(Q.comoTexto(q), '');
 });
+
+test('quadro do Google Docs com o título "Competências do egresso" centralizado abaixo dos cabeçalhos P1 a P6', () => {
+  const q = Q.ler(require('./fixtures/quadro-gdocs-centralizado.json'));
+  assert.ok(q.ok, q.motivo);
+  assert.deepEqual(q.linhas.C1, [false, true, true, true, true, true]);
+  assert.deepEqual(q.linhas.C2, [true, false, true, false, false, false]);
+  assert.deepEqual(q.linhas.C3, [false, true, true, true, true, true]);
+  assert.deepEqual(q.linhas.C4, [false, false, true, true, true, false]);
+  assert.ok(q.linhas.nenhuma.every((v) => !v));
+  assert.equal(q.ferramentas[0], 'Google Docs');
+  assert.equal(q.ferramentas[1], 'Google Slides, Canva, Gemini');
+  assert.match(q.ferramentas[2], /^Google Drive, Docs, Planilhas, Apresentações, Forms, Meet, Agenda, Google Classroom, Padlet, MIRO, Canva, WhatsApp$/);
+  assert.equal(q.ferramentas[4], 'Gemini (Gem Íris)');
+  assert.equal(q.ferramentas[5], 'Gemini notebook Google Docs, Padlet');
+});

@@ -78,8 +78,8 @@ PALAVRAS-CHAVE: ${textoCampo(c.palavrasChave)}
 
 CONTEXTUALIZAÇÃO PESSOAL, DESAFIO E PERCURSO DE PESQUISA:
 ${textoCampo(c.contextualizacao)}
-Pergunta-desafio identificada: ${textoCampo(c.desafio)}
-Público-alvo identificado: ${textoCampo(c.publicoAlvo)}
+[Anotação do aplicativo, não é texto do estudante] Pergunta-desafio localizada na contextualização: ${textoCampo(c.desafio)}
+[Anotação do aplicativo, não é texto do estudante] Público-alvo localizado na contextualização: ${textoCampo(c.publicoAlvo)}
 
 P2 (vídeo e roteiro): ${textoCampo(c.recursoP2)}
 P3 (proposta formativa): ${textoCampo(c.recursoP3)}
@@ -112,9 +112,12 @@ function montarPrompt(campos={}){
 
 REGRAS DE EVIDÊNCIA
 - O texto vem de um PDF lido automaticamente. Formatação visual (recuo, espaçamento, alinhamento, cor do texto) não é visível no texto: use as observações do professor sobre formato quando houver e não penalize nem confirme formatação sem evidência.
+- As linhas iniciadas por "[Anotação do aplicativo" e os rótulos em MAIÚSCULAS (TÍTULO, RESUMO, P2 (vídeo e roteiro), Resultados, Ferramentas etc.) foram escritos pelo aplicativo para organizar o texto extraído. Eles NÃO fazem parte do relato: nunca os aponte como restos do modelo nem peça que sejam removidos.
+- Só afirme que um trecho existe no relato se ele aparecer no texto abaixo; não deduza nem invente trechos.
+- Não peça no feedback que o estudante "confira" formatação (espaçamento, recuo, alinhamento, fonte, título): o texto extraído não mostra formatação e isso é verificado pelo professor.
 - Restos do modelo (textos de orientação em azul, como "Escreva ao menos um parágrafo", "[Escreva aqui]", "(seu nome)", "preencher conforme exemplos") indicam orientações não removidas.
 - O relato deve ser narrativo. Muitas perguntas copiadas do modelo seguidas de respostas indicam formato de perguntas e respostas.
-- No quadro de competências, avalie a consistência do registro, não a quantidade de competências marcadas. No formato "C1 | P1: x | P2: | ...", só "x" é marcação; coluna vazia significa sem marcação. Exemplos do modelo mantidos sem adaptação (como as marcações e ferramentas de exemplo da coluna P1/P2) contam como não preenchidos.
+- No quadro de competências, avalie a consistência do registro, não a quantidade de competências marcadas. No formato "C1 | P1: x | P2: | ...", só "x" é marcação; coluna vazia significa sem marcação. Quando o quadro chega nesse formato, as colunas P1 a P6 FORAM identificadas no PDF e as ferramentas da linha "Ferramentas" já estão separadas por atividade: não peça para identificar as colunas nem para separar as ferramentas por P. Exemplos do modelo mantidos sem adaptação (como as marcações e ferramentas de exemplo da coluna P1/P2) contam como não preenchidos.
 - Na declaração de IA, usar ou não usar IA não dá vantagem nem penalidade. A frase "Não utilizei ferramentas de IA generativa na elaboração deste relato." atende integralmente ao critério.
 - O reconhecimento de limitações nos resultados não é penalizado por si só.
 - Produza justificativas específicas, citando evidências ou ausências concretas do relato.

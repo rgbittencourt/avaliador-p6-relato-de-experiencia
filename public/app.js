@@ -165,7 +165,7 @@ async function importPdf(file){
     for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const content=await page.getTextContent();const vp1=page.getViewport({scale:1});rawItemPages.push({altura:vp1.height,itens:content.items.map(t=>({x:t.transform[4],y:t.transform[5],w:t.width,h:t.height,s:t.str}))});rawPdfPages.push(normalizePdfText(layoutRows(content).map(rowText).join('\n')));const viewport=page.getViewport({scale:1.25});const canvas=document.createElement('canvas');canvas.width=viewport.width;canvas.height=viewport.height;await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;pagePreviews.push(canvas.toDataURL('image/jpeg',.82));}
     const text=rawPdfPages.join('\n\n');applyPreliminaryExtraction(text,file.name);lerQuadroPorPosicao();renderPageGallery();$('semanticActions').classList.remove('hidden');
     const estrutura=/RELATO DE EXPERI[ÊE]NCIA/i.test(text)&&/DECLARA[ÇC][ÃA]O DE USO DE INTELIG/i.test(text);
-    $('conformidadeModelo').value=`Arquivo PDF com ${pdf.numPages} página(s); estrutura do modelo P6 ${estrutura?'identificada':'não confirmada'}. Confira visualmente a formatação do resumo (sem recuo, espaçamento simples, justificado) e se os textos azuis foram removidos.`;
+    $('conformidadeModelo').value=`Arquivo PDF com ${pdf.numPages} página(s); estrutura do modelo P6 ${estrutura?'identificada':'não confirmada'}.`;
     $('pdfStatus').textContent=`PDF lido: ${pdf.numPages} página(s). Iniciando a interpretação semântica...`;checkDuplicate();updateScore();await semanticExtract();
   }catch(e){$('pdfStatus').textContent=`Falha ao ler o PDF: ${e.message}`;}
 }

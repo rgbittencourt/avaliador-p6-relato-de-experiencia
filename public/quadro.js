@@ -31,15 +31,20 @@
       const l = linhas.find((x) => Math.abs(x.gy - it.gy) < 3);
       if (l) l.partes.push(it); else linhas.push({ gy: it.gy, partes: [it] });
     }
-    let texto = '';
+    // largura de cada linha: uma palavra só é partida quando a linha anterior ocupa (quase) toda a célula
+    for (const l of linhas) { const xs = l.partes.map((p) => p.x), xf = l.partes.map((p) => p.x + (p.w || 0)); l.larg = Math.max(...xf) - Math.min(...xs); }
+    const largMax = Math.max(0, ...linhas.map((l) => l.larg));
+    let texto = '', anterior = null;
     for (const l of linhas) {
       const s = l.partes.sort((a, b) => a.x - b.x).map((p) => p.s.trim()).filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
       if (!s) continue;
-      if (!texto) { texto = s; continue; }
+      if (!texto) { texto = s; anterior = l; continue; }
       const ultima = texto.split(' ').pop(), primeira = s.split(' ')[0];
-      const quebrada = /[a-zà-ú]$/i.test(ultima) && /^[a-zà-ú]/.test(primeira) && !/[,;.:]$/.test(ultima)
+      const cheia = !largMax || !anterior.larg || anterior.larg >= largMax * 0.85;
+      const quebrada = cheia && /[a-zà-ú]$/i.test(ultima) && /^[a-zà-ú]/.test(primeira) && !/[,;.:]$/.test(ultima)
         && !PALAVRAS_CURTAS.has(ultima.toLowerCase()) && !PALAVRAS_CURTAS.has(primeira.replace(/[,;.]$/, '').toLowerCase());
       texto += (quebrada ? '' : ' ') + s;
+      anterior = l;
     }
     return texto.replace(/\s+([,;])/g, '$1').replace(/\s+/g, ' ').trim();
   }
@@ -48,7 +53,9 @@
     const itens = achatar(paginas);
     const ini = itens.find((t) => /AUTOAVALIA[ÇC][ÃA]O DE COMPET/i.test(t.s)) || itens.find((t) => /Compet[êe]ncias do egresso/i.test(t.s));
     if (!ini) return { ok: false, motivo: 'Quadro de competências não encontrado no PDF.' };
-    const depois = itens.filter((t) => t.gy >= ini.gy);
+    // O título "Competências do egresso" pode estar centralizado na vertical, abaixo dos cabeçalhos P1 a P6:
+    // procura os cabeçalhos também um pouco acima dele, na mesma página.
+    const depois = itens.filter((t) => t.gy >= ini.gy - 80);
     // cabeçalho: P1: ... P6:
     const colunas = [];
     for (let n = 1; n <= 6; n++) {
